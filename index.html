@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bomb Game</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #111;
+        color: #fff;
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        text-align: center;
+    }
+
+    #startBtn {
+        background: linear-gradient(135deg, #ff3b3b, #b30000);
+        color: #fff;
+        padding: 15px 35px;
+        font-size: 24px;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+        transition: 0.2s;
+    }
+    #startBtn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(255, 60, 60, 0.9);
+    }
+
+    #logoBomb {
+        width: 180px;
+        margin: 20px 0;
+        transition: 0.2s;
+    }
+
+    #timer {
+        font-size: 50px;
+        margin: 10px 0;
+    }
+
+    #questionBox {
+        font-size: 28px;
+        margin: 15px 0;
+    }
+
+    #answerInput {
+        font-size: 24px;
+        padding: 10px;
+        width: 120px;
+        text-align: center;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+    }
+
+    #submitAnswer {
+        margin-top: 10px;
+        padding: 12px 25px;
+        background: #00c853;
+        color: #fff;
+        font-size: 20px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    #submitAnswer:hover {
+        background: #00e676;
+    }
+
+    @keyframes explode {
+        0% { transform: scale(1) rotate(0deg); }
+        20% { transform: scale(1.2) rotate(10deg); }
+        40% { transform: scale(0.9) rotate(-10deg); }
+        60% { transform: scale(1.3) rotate(20deg); }
+        100% { transform: scale(0); opacity: 0; }
+    }
+</style>
+</head>
+<body>
+
+<button id="startBtn">شروع بازی</button>
+
+<img id="logoBomb" src="logo.png" style="display:none;" />
+<div id="timer"></div>
+<div id="questionBox"></div>
+<input id="answerInput" style="display:none;" />
+<button id="submitAnswer" style="display:none;">ثبت</button>
+
+<script>
+let timeLeft = 10;
+let dingInterval;
+let ticking;
+let answerCorrect = false;
+let num1, num2;
+let audioCtx;
+
+function playDing(speed) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.frequency.value = 900;
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.1);
+}
+
+function startDingLoop() {
+    clearInterval(dingInterval);
+    dingInterval = setInterval(() => {
+        playDing();
+    }, Math.max(200, timeLeft * 10));
+}
+
+function newQuestion() {
+    num1 = Math.floor(Math.random() * 90) + 10;
+    num2 = Math.floor(Math.random() * 90) + 10;
+    questionBox.textContent = `${num1} + ${num2} = ?`;
+    answerInput.value = "";
+}
+
+function startGame() {
+    startBtn.style.display = "none";
+    logoBomb.style.display = "block";
+    answerInput.style.display = "block";
+    submitAnswer.style.display = "block";
+
+    newQuestion();
+    startDingLoop();
+
+    ticking = setInterval(() => {
+        timeLeft--;
+        timer.textContent = timeLeft + " ثانیه";
+
+        if (timeLeft <= 15) logoBomb.style.transform = "scale(1.15)";
+        if (timeLeft <= 8) logoBomb.style.transform = "scale(1.25)";
+
+        if (timeLeft <= 0) explodeBomb();
+    }, 1000);
+}
+
+function explodeBomb() {
+    clearInterval(ticking);
+    clearInterval(dingInterval);
+    logoBomb.style.animation = "explode 0.5s forwards";
+    timer.textContent = "💥 انفجار!";
+}
+
+submitAnswer.addEventListener("click", () => {
+    const val = parseInt(answerInput.value);
+    if (val === num1 + num2) {
+        newQuestion();
+    }
+});
+
+startBtn.addEventListener("click", startGame);
+</script>
+<button id="restartBtn" style="display:none;margin-top:25px;padding:14px 32px;font-size:22px;border:none;border-radius:12px;background:#2979ff;color:#fff;cursor:pointer;box-shadow:0 0 12px rgba(0,140,255,0.6);">شروع دوباره</button>
+
+<script>
+// اضافه کردن ریست
+const restartBtn = document.getElementById("restartBtn");
+
+restartBtn.addEventListener("click", () => {
+    location.reload();
+});
+
+// نمایش دکمه بعد انفجار
+function explodeBomb() {
+    clearInterval(ticking);
+    clearInterval(dingInterval);
+    logoBomb.style.animation = "explode 0.5s forwards";
+    timer.textContent = "💥 انفجار!";
+    restartBtn.style.display = "inline-block";
+}
+</script>
+</body>
+</html>
